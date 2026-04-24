@@ -10,7 +10,7 @@ Send USDC, XLM, and other assets across borders in seconds — not days. Stellar
 
 > App runs on **Stellar Testnet**. No real funds are used.
 
-- **Frontend:** [http://localhost:3001](http://localhost:3001) (run locally)
+- **Live App:** [https://stellar-send.vercel.app](https://stellar-send.vercel.app)
 - **Stellar Expert Explorer:** [stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet)
 - **View transactions on-chain:** Every transfer links directly to its transaction on Stellar Expert — click any TX hash in the History page to verify it on-chain.
 
