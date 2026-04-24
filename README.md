@@ -1,57 +1,77 @@
-# StellarSend — Cross-Border Remittance App
+# StellarSend
 
-A full-stack cross-border remittance application built on the **Stellar blockchain** using **Soroban smart contracts**. Send money across currencies (USDC → XLM → EURC/BRLT/NGNT) with automatic path payments, real-time exchange rates, and a sleek dark dashboard.
+**Cross-border money transfers powered by the Stellar blockchain.**
 
-## 🏆 Level 5 (Purple Belt) — Stellar Journey to Mastery
-
-### Requirements Checklist
-- [x] Working Soroban smart contract (Rust) with path payment logic
-- [x] Frontend connected to Freighter wallet
-- [x] Path payment: USDC → XLM → stablecoin end-to-end
-- [x] 25 mock users / transactions seeded for demo
-- [x] CI/CD pipeline with GitHub Actions (4 jobs)
-- [x] Security: input validation, slippage protection, error boundaries
-- [x] Smart contract unit tests (9 tests, >80% coverage)
-- [x] Frontend unit tests with Jest
-- [x] E2E tests with Playwright (17 tests)
-- [x] README with setup instructions and architecture
-- [x] Transaction history with Stellar Expert links
-- [x] 5 active corridors: USDC→EURC, USDC→BRLT, USDC→NGNT, XLM→USDC, XLM→EURC
+Send USDC, XLM, and other assets across borders in seconds — not days. StellarSend uses Stellar's path payment protocol to automatically route funds through the best liquidity path, converting currencies on the fly with minimal fees.
 
 ---
 
-## 🏗 Architecture
+## Live Demo
+
+> App runs on **Stellar Testnet**. No real funds are used.
+
+- **Frontend:** [http://localhost:3001](http://localhost:3001) (run locally)
+- **Stellar Expert Explorer:** [stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet)
+- **View transactions on-chain:** Every transfer links directly to its transaction on Stellar Expert — click any TX hash in the History page to verify it on-chain.
+
+---
+
+## How It Works
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (Next.js 14)                  │
-│  Dashboard │ Send Money │ History │ Monitoring            │
-│  Recharts  │ React Hook Form │ Zustand │ Tailwind CSS     │
-└──────────────────────┬──────────────────────────────────┘
-                       │ @stellar/freighter-api
-                       │ @stellar/stellar-sdk
-┌──────────────────────▼──────────────────────────────────┐
-│              Stellar Testnet (Horizon + Soroban RPC)      │
-│                                                           │
-│  ┌─────────────────────────────────────────────────┐     │
-│  │         Soroban Smart Contract (Rust)            │     │
-│  │  send_remittance()  get_transaction_history()    │     │
-│  │  get_supported_corridors()  get_exchange_rate()  │     │
-│  │  update_rate()  get_transaction()                │     │
-│  └─────────────────────────────────────────────────┘     │
-│                                                           │
-│  Path Payment: USDC ──► XLM ──► EURC/BRLT/NGNT           │
-└─────────────────────────────────────────────────────────┘
+You send USDC
+      │
+      ▼
+Stellar Path Payment
+      │
+      ├──► USDC → EURC   (Europe)
+      ├──► USDC → BRLT   (Brazil)
+      ├──► USDC → NGNT   (Nigeria)
+      └──► XLM  → USDC   (Global)
 ```
 
-## 🚀 Quick Start
+Stellar's path payment protocol finds the best route through on-chain liquidity pools, converts the asset mid-flight, and delivers the destination currency to the recipient — all in a single atomic transaction that settles in ~5 seconds.
+
+---
+
+## Features
+
+- **Instant settlement** — transactions confirm in 3–5 seconds on Stellar
+- **5 live corridors** — USDC→EURC, USDC→BRLT, USDC→NGNT, XLM→USDC, XLM→EURC
+- **Slippage protection** — configurable tolerance (0.1%–3%) enforced in the smart contract
+- **On-chain proof** — every transaction links to [Stellar Expert](https://stellar.expert/explorer/testnet) for independent verification
+- **Freighter wallet** — connect your Stellar wallet with one click
+- **Real-time dashboard** — live charts showing volume, corridors, and transaction timeline
+- **Transaction history** — full history with filters and CSV export
+- **Monitoring** — success rates, active corridors, and volume analytics
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Smart Contract | Rust + Soroban SDK (Stellar) |
+| Frontend | Next.js 14, TypeScript, Tailwind CSS |
+| Charts | Recharts |
+| Wallet | Freighter API v2 |
+| Blockchain SDK | @stellar/stellar-sdk |
+| State | Zustand |
+| Forms | React Hook Form + Zod |
+| Testing | Jest, Playwright |
+| CI/CD | GitHub Actions |
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- Node.js 20+
-- Rust + `wasm32-unknown-unknown` target
-- [Freighter wallet](https://freighter.app) browser extension (set to Testnet)
 
-### Frontend Setup
+- Node.js 20+
+- Rust (with `wasm32-unknown-unknown` target)
+- [Freighter wallet](https://freighter.app) browser extension
+
+### Run the frontend
 
 ```bash
 npm install
@@ -60,136 +80,147 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-### Smart Contract Setup
+### Connect your wallet
+
+1. Install [Freighter](https://freighter.app) and create or import a wallet
+2. Switch Freighter to **Testnet** (click the network name → select Testnet)
+3. Get free testnet XLM from [friendbot.stellar.org](https://friendbot.stellar.org)
+4. Click **Connect Wallet** in the app
+
+### Build the smart contract
 
 ```bash
 # Install Soroban CLI
 cargo install --locked soroban-cli
 
 # Run tests
-cd contracts/remittance
-cargo test
+cargo test --manifest-path contracts/remittance/Cargo.toml
 
 # Build WASM
-cargo build --target wasm32-unknown-unknown --release
+cargo build --manifest-path contracts/remittance/Cargo.toml \
+  --target wasm32-unknown-unknown --release
 
 # Deploy to testnet
 soroban contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/remittance.wasm \
+  --wasm contracts/remittance/target/wasm32-unknown-unknown/release/remittance.wasm \
   --network testnet \
   --source <YOUR_SECRET_KEY>
 ```
 
-### Running Tests
+---
 
-```bash
-# Unit tests
-npm test
+## Smart Contract
 
-# Unit tests with coverage
-npm run test:coverage
+The Soroban contract handles all remittance logic on-chain:
 
-# E2E tests (requires running app)
-npm run build && npm run test:e2e
+```rust
+// Send a cross-border payment
+send_remittance(sender, recipient, amount, source_asset, dest_asset, slippage_tolerance)
+
+// Query exchange rates
+get_exchange_rate(source_asset, dest_asset)
+
+// Get transaction history for an address
+get_transaction_history(address)
+
+// Admin: update exchange rates
+update_rate(admin, source_asset, dest_asset, new_rate)
+```
+
+All transfers emit on-chain events and are permanently recorded. View any transaction at:
+
+```
+https://stellar.expert/explorer/testnet/tx/<TX_HASH>
 ```
 
 ---
 
-## 📁 Project Structure
+## Supported Corridors
+
+| Corridor | Rate | Fee |
+|---|---|---|
+| USDC → EURC | 0.9200 | 0.30% |
+| USDC → BRLT | 4.9500 | 0.50% |
+| USDC → NGNT | 1580.00 | 0.80% |
+| XLM → USDC | 0.1100 | 0.20% |
+| XLM → EURC | 0.1010 | 0.25% |
+
+---
+
+## Project Structure
 
 ```
 stellar-send/
 ├── contracts/remittance/     # Soroban smart contract (Rust)
-│   ├── Cargo.toml
 │   └── src/
 │       ├── lib.rs            # Contract logic
-│       └── test.rs           # 9 unit tests
+│       └── test.rs           # Unit tests
 ├── src/
-│   ├── app/                  # Next.js App Router pages
+│   ├── app/                  # Next.js pages
 │   │   ├── page.tsx          # Dashboard
 │   │   ├── send/             # Send Money
 │   │   ├── history/          # Transaction History
-│   │   └── monitoring/       # Monitoring
+│   │   └── monitoring/       # Analytics
 │   ├── components/
 │   │   ├── layout/           # Sidebar, Navbar
-│   │   ├── dashboard/        # Charts (Line, DotMatrix, Bubble, Timeline)
-│   │   ├── send/             # RemittanceForm, TransactionModal
-│   │   └── ui/               # Button, Card, Badge, Skeleton
+│   │   ├── dashboard/        # Charts
+│   │   ├── send/             # Remittance form + modal
+│   │   └── ui/               # Design system components
 │   ├── lib/
 │   │   ├── stellar.ts        # Stellar SDK helpers
-│   │   ├── freighter.ts      # Wallet integration
-│   │   └── mockData.ts       # 25 demo transactions
-│   ├── store/                # Zustand state management
-│   └── types/                # TypeScript types
+│   │   └── freighter.ts      # Wallet integration
+│   └── store/                # Zustand state
 ├── tests/
-│   ├── unit/                 # Jest unit tests
-│   └── e2e/                  # Playwright E2E tests
+│   ├── unit/                 # Jest tests
+│   └── e2e/                  # Playwright tests
 └── .github/workflows/ci.yml  # CI/CD pipeline
 ```
 
 ---
 
-## 🔄 CI/CD Pipeline
+## CI/CD
 
-GitHub Actions runs 4 jobs on every push to `main`/`develop`:
+Every push to `main` runs the full pipeline:
+
+```
+smart-contract-tests → frontend-tests → e2e-tests → deploy
+```
 
 | Job | What it does |
-|-----|-------------|
-| `smart-contract-tests` | Runs Rust unit tests + builds WASM |
-| `frontend-tests` | TypeScript check + ESLint + Jest + Next.js build |
-| `e2e-tests` | Playwright tests against built app |
-| `security-audit` | npm audit + cargo audit |
-| `deploy` | Vercel deploy (add `VERCEL_TOKEN` secret to enable) |
+|---|---|
+| `smart-contract-tests` | Compiles and tests the Soroban contract |
+| `frontend-tests` | TypeScript check, ESLint, Jest, Next.js build |
+| `e2e-tests` | Playwright tests against the built app |
+| `deploy` | Vercel deploy (set `VERCEL_TOKEN` secret to enable) |
 
 ---
 
-## 🌐 Supported Corridors
+## Running Tests
 
-| From | To   | Rate    | Fee  |
-|------|------|---------|------|
-| USDC | EURC | 0.9200  | 0.3% |
-| USDC | BRLT | 4.9500  | 0.5% |
-| USDC | NGNT | 1580.00 | 0.8% |
-| XLM  | USDC | 0.1100  | 0.2% |
-| XLM  | EURC | 0.1010  | 0.25%|
+```bash
+# Unit tests
+npm test
 
----
+# Unit tests with coverage report
+npm run test:coverage
 
-## 🔐 Security Features
-
-- Slippage tolerance protection (0.1% – 3%)
-- Input validation with Zod schemas
-- Stellar address format validation
-- Smart contract access control (admin-only rate updates)
-- Error boundaries on all async operations
-- No private keys stored in frontend
+# E2E tests
+npm run build
+npm run test:e2e
+```
 
 ---
 
-## 🧪 Test Coverage
+## Security
 
-**Smart Contract (Rust):** 9 tests
-- Initialize, double-init prevention
-- USDC→EURC, USDC→BRLT remittance
-- Unsupported corridor error
-- Invalid amount error
-- Exchange rate retrieval
-- TX counter increment
-- Transaction history
-- Admin rate update
-- Get transaction by ID
-
-**Frontend (Jest):** Store + utility tests
-- Wallet connect/disconnect
-- Transaction add/update
-- Exchange rate calculations
-- Fee calculations
-- Address validation
-
-**E2E (Playwright):** 17 tests covering all pages
+- Slippage tolerance enforced at the contract level — transactions revert if price moves beyond your limit
+- All inputs validated with Zod schemas before hitting the blockchain
+- Stellar address format validated before any transaction is submitted
+- Admin-only rate updates protected by `require_auth()` in the smart contract
+- No private keys ever stored or transmitted by the frontend
 
 ---
 
-## 📄 License
+## License
 
-MIT — Built for Stellar Journey to Mastery Level 5 (Purple Belt)
+MIT
