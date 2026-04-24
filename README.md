@@ -220,6 +220,18 @@ npm run test:e2e
 - No private keys ever stored or transmitted by the frontend
 
 ---
+screenshots
+
+laptop
+<img width="1268" height="868" alt="Screenshot 2026-04-24 at 10 19 03 PM" src="https://github.com/user-attachments/assets/825825dd-6c07-488d-b6e8-2510ce6b90d2" />
+<img width="1278" height="853" alt="Screenshot 2026-04-24 at 10 19 11 PM" src="https://github.com/user-attachments/assets/ab952bb7-a674-442f-8c16-e66d614866ee" />
+<img width="1262" height="861" alt="Screenshot 2026-04-24 at 10 19 20 PM" src="https://github.com/user-attachments/assets/ad99a691-9d27-4c23-aec7-ba8bafdeac8f" />
+<img width="1202" height="806" alt="Screenshot 2026-04-24 at 10 19 28 PM" src="https://github.com/user-attachments/assets/d7767a44-86b7-4192-84c1-fdf3f5fcd0bc" />
+
+
+mobile-
+<img width="373" height="661" alt="Screenshot 2026-04-24 at 10 19 51 PM" src="https://github.com/user-attachments/assets/e0b5033f-9b10-4650-940f-11b99ed9094b" />
+<img width="374" height="668" alt="Screenshot 2026-04-24 at 10 19 57 PM" src="https://github.com/user-attachments/assets/25cf8723-8618-499e-b551-7fa9c1cbcd39" />
 
 ## License
 
