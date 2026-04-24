@@ -4,39 +4,56 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { Search, Bell, ChevronDown, Wallet } from "lucide-react";
 import { useRemittanceStore } from "@/store/useRemittanceStore";
-import { connectWallet } from "@/lib/freighter";
-import { truncateAddress } from "@/lib/freighter";
+import { connectWallet, getWalletAddress, truncateAddress } from "@/lib/freighter";
 import Button from "@/components/ui/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 const navTabs = [
   { href: "/",           label: "Dashboard" },
   { href: "/send",       label: "Send Money" },
   { href: "/monitoring", label: "Monitoring" },
-  { href: "/history",    label: "Support" },
+  { href: "/history",    label: "History" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { wallet, setWallet } = useRemittanceStore();
+  const { wallet, setWallet, disconnectWallet } = useRemittanceStore();
   const [connecting, setConnecting] = useState(false);
+
+  // Auto-restore wallet if already allowed
+  useEffect(() => {
+    getWalletAddress().then((addr) => {
+      if (addr) {
+        setWallet({ address: addr, isConnected: true, network: "TESTNET" });
+      }
+    });
+  }, [setWallet]);
 
   const handleConnect = async () => {
     setConnecting(true);
     try {
       const state = await connectWallet();
-      if (state.isConnected) {
+      if (state.isConnected && state.address) {
         setWallet(state);
-        toast.success("Wallet connected!");
+        toast.success(`Connected: ${truncateAddress(state.address)}`);
       } else {
-        toast.error("Freighter not found. Install the Freighter extension.");
+        // Give a more helpful message
+        toast.error(
+          "Could not connect. Make sure Freighter is unlocked and set to Testnet.",
+          { duration: 5000 }
+        );
       }
-    } catch {
-      toast.error("Failed to connect wallet");
+    } catch (err) {
+      toast.error("Freighter connection failed. Is the extension unlocked?");
     } finally {
       setConnecting(false);
     }
+  };
+
+  const handleDisconnect = () => {
+    disconnectWallet();
+    toast.success("Wallet disconnected");
   };
 
   return (
@@ -68,18 +85,22 @@ export default function Navbar() {
       </button>
 
       {/* Wallet */}
-      {wallet.isConnected ? (
-        <div className="flex items-center gap-2 bg-bg-card border border-border rounded-xl px-3 py-1.5">
+      {wallet.isConnected && wallet.address ? (
+        <div
+          className="flex items-center gap-2 bg-bg-card border border-border rounded-xl px-3 py-1.5 cursor-pointer hover:bg-bg-hover transition-colors"
+          onClick={handleDisconnect}
+          title="Click to disconnect"
+        >
           <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse" />
           <span className="text-white text-sm font-medium">
-            {truncateAddress(wallet.address ?? "")}
+            {truncateAddress(wallet.address)}
           </span>
           <ChevronDown size={14} className="text-text-secondary" />
         </div>
       ) : (
         <Button size="sm" onClick={handleConnect} loading={connecting}>
           <Wallet size={14} className="mr-1.5" />
-          Connect Wallet
+          {connecting ? "Connecting..." : "Connect Wallet"}
         </Button>
       )}
 
