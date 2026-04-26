@@ -133,33 +133,51 @@ export async function buildAndSubmitPayment(
   const rate = getExchangeRate(sourceAsset, destAsset);
   const feeBps = getFeeBps(sourceAsset, destAsset);
   const received = calculateReceived(Number(amount), rate, feeBps);
-  // Allow 1% slippage on dest min
-  const destMin = (received * 0.99).toFixed(7);
+  // Allow 2% slippage on dest min
+  const destMin = (received * 0.98).toFixed(7);
+
+  let operation;
+  if (sourceAsset === destAsset) {
+    // Same asset — simple payment
+    operation = Operation.payment({
+      destination: recipientAddress,
+      asset: sendAsset,
+      amount: Number(amount).toFixed(7),
+    });
+  } else {
+    // Cross-asset — path payment
+    operation = Operation.pathPaymentStrictSend({
+      sendAsset,
+      sendAmount: Number(amount).toFixed(7),
+      destination: recipientAddress,
+      destAsset: receiveAsset,
+      destMin,
+      path: [],
+    });
+  }
 
   const tx = new TransactionBuilder(account, {
     fee: BASE_FEE,
     networkPassphrase: STELLAR_NETWORK,
   })
-    .addOperation(
-      Operation.pathPaymentStrictSend({
-        sendAsset,
-        sendAmount: Number(amount).toFixed(7),
-        destination: recipientAddress,
-        destAsset: receiveAsset,
-        destMin,
-        path: [],
-      })
-    )
+    .addOperation(operation)
     .setTimeout(30)
     .build();
-
-  const xdr = tx.toXDR();
   const signed = await signFn(xdr);
   if (!signed) throw new Error("Transaction signing was cancelled or failed.");
 
   const result = await server.submitTransaction(
     TransactionBuilder.fromXDR(signed, STELLAR_NETWORK)
-  );
+  ).catch((err) => {
+    // Extract Horizon result codes for a readable error
+    const extras = err?.response?.data?.extras;
+    const codes = extras?.result_codes;
+    if (codes) {
+      const detail = [codes.transaction, ...(codes.operations ?? [])].filter(Boolean).join(", ");
+      throw new Error(`Stellar error: ${detail}`);
+    }
+    throw new Error(err?.message ?? "Transaction submission failed");
+  });
 
   return { txHash: result.hash };
 }

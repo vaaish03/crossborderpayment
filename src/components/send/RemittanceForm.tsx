@@ -100,7 +100,7 @@ export default function RemittanceForm() {
     setModalTx(pendingTx);
     addTransaction(pendingTx);
 
-    try {
+  try {
       // Build, sign via Freighter popup, and submit to Stellar testnet
       const { txHash } = await buildAndSubmitPayment(
         wallet.address,
