@@ -195,8 +195,16 @@ export default function RemittanceForm() {
 
           {/* Slippage */}
           <div>
-            <div className="flex justify-between mb-1.5">
-              <label className="text-text-secondary text-xs">Slippage Tolerance</label>
+            <div className="flex justify-between mb-1.5 items-center">
+              <label className="text-text-secondary text-xs">
+                Slippage Tolerance
+                <span
+                  className="ml-1 text-text-muted cursor-help"
+                  title="Max price movement you'll accept. If the rate shifts more than this before the transaction confirms, it will revert to protect you."
+                >
+                  ⓘ
+                </span>
+              </label>
               <span className="text-accent-green text-xs font-medium">{(slippage / 100).toFixed(1)}%</span>
             </div>
             <input
@@ -208,8 +216,8 @@ export default function RemittanceForm() {
               className="w-full accent-accent-green"
             />
             <div className="flex justify-between text-text-muted text-xs mt-1">
-              <span>0.1%</span>
-              <span>3.0%</span>
+              <span>0.1% (safer)</span>
+              <span>3.0% (faster)</span>
             </div>
           </div>
 

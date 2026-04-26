@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { CheckCircle, Clock, XCircle, ExternalLink, X } from "lucide-react";
+import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
 import type { Transaction } from "@/types";
 import { getStellarExpertUrl } from "@/lib/stellar";
@@ -20,6 +21,8 @@ const steps = ["Initiating", "Broadcasting", "Confirming", "Complete"];
 export default function TransactionModal({ tx, onClose }: Props) {
   const [step, setStep] = useState(0);
 
+  const [toastFired, setToastFired] = useState(false);
+
   useEffect(() => {
     if (tx.status === "pending") {
       const timers = steps.map((_, i) =>
@@ -33,6 +36,13 @@ export default function TransactionModal({ tx, onClose }: Props) {
 
   const isDone = tx.status === "completed" || step >= steps.length;
   const isFailed = tx.status === "failed";
+
+  useEffect(() => {
+    if (isDone && !isFailed && !toastFired) {
+      setToastFired(true);
+      toast.success("Transaction confirmed on Stellar Testnet!", { duration: 5000 });
+    }
+  }, [isDone, isFailed, toastFired]);
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -140,6 +150,17 @@ export default function TransactionModal({ tx, onClose }: Props) {
         >
           {isDone ? "Done" : "Close"}
         </Button>
+        {isDone && !isFailed && (
+          <a
+            href={getStellarExpertUrl(tx.txHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full mt-3 text-accent-green text-sm hover:underline"
+          >
+            <ExternalLink size={14} />
+            View on Stellar Expert
+          </a>
+        )}
       </div>
     </div>
   );

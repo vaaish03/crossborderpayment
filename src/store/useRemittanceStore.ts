@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import { Transaction, WalletState, DashboardStats } from "@/types";
-import { MOCK_TRANSACTIONS, MOCK_STATS } from "@/lib/mockData";
+import { MOCK_CORRIDORS } from "@/lib/mockData";
+
+const EMPTY_STATS: DashboardStats = {
+  totalVolume: 0,
+  totalTransactions: 0,
+  successRate: 0,
+  activeCorridors: MOCK_CORRIDORS.filter((c) => c.active).length,
+  pendingCount: 0,
+  failedCount: 0,
+};
 
 interface RemittanceStore {
   // Wallet
@@ -36,7 +45,7 @@ export const useRemittanceStore = create<RemittanceStore>((set, get) => ({
   disconnectWallet: () =>
     set({ wallet: { address: null, isConnected: false, network: "TESTNET" } }),
 
-  transactions: MOCK_TRANSACTIONS,
+  transactions: [],
 
   addTransaction: (tx) =>
     set((state) => ({
@@ -50,7 +59,7 @@ export const useRemittanceStore = create<RemittanceStore>((set, get) => ({
       ),
     })),
 
-  stats: MOCK_STATS,
+  stats: EMPTY_STATS,
 
   refreshStats: () => {
     const txs = get().transactions;
@@ -59,8 +68,8 @@ export const useRemittanceStore = create<RemittanceStore>((set, get) => ({
       stats: {
         totalVolume: txs.reduce((s, t) => s + t.amountSent, 0),
         totalTransactions: txs.length,
-        successRate: Math.round((completed.length / txs.length) * 100),
-        activeCorridors: 5,
+        successRate: txs.length > 0 ? Math.round((completed.length / txs.length) * 100) : 0,
+        activeCorridors: MOCK_CORRIDORS.filter((c) => c.active).length,
         pendingCount: txs.filter((t) => t.status === "pending").length,
         failedCount: txs.filter((t) => t.status === "failed").length,
       },
