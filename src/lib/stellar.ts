@@ -101,21 +101,17 @@ export function truncateAddress(address: string, chars = 6): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
-// ─── Real Stellar path payment (via API route to avoid Node native deps) ─────
+// ─── Real Stellar payment via API route ──────────────────────────────────────
 export async function buildAndSubmitPayment(
   senderAddress: string,
   recipientAddress: string,
   amount: string,
   sourceAsset: AssetCode,
   destAsset: AssetCode,
+  amountReceived: number,
   signFn: (xdr: string) => Promise<string | null>
 ): Promise<{ txHash: string }> {
-  const rate = getExchangeRate(sourceAsset, destAsset);
-  const feeBps = getFeeBps(sourceAsset, destAsset);
-  const received = calculateReceived(Number(amount), rate, feeBps);
-  const destMin = (received * 0.98).toFixed(7);
-
-  // Step 1: Build unsigned XDR server-side
+  // Step 1: Build unsigned XDR server-side (always XLM, no trustlines needed)
   const buildRes = await fetch("/api/build-tx", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -125,7 +121,7 @@ export async function buildAndSubmitPayment(
       amount,
       sourceAsset,
       destAsset,
-      destMin,
+      amountReceived,
     }),
   });
   const buildData = await buildRes.json();
@@ -135,7 +131,7 @@ export async function buildAndSubmitPayment(
   const signed = await signFn(buildData.xdr);
   if (!signed) throw new Error("Transaction signing was cancelled.");
 
-  // Step 3: Submit signed XDR server-side
+  // Step 3: Submit signed XDR
   const submitRes = await fetch("/api/build-tx", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

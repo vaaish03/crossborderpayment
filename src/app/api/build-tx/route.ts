@@ -6,57 +6,40 @@ import {
   Operation,
   BASE_FEE,
   Networks,
+  Memo,
 } from "@stellar/stellar-sdk";
 
 const HORIZON_URL = "https://horizon-testnet.stellar.org";
 const STELLAR_NETWORK = Networks.TESTNET;
 
-const ASSETS: Record<string, { code: string; issuer: string | null }> = {
-  USDC: { code: "USDC", issuer: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5" },
-  EURC: { code: "EURC", issuer: "GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO" },
-  XLM:  { code: "XLM",  issuer: null },
-  BRLT: { code: "BRLT", issuer: "GDVKY2GU2DRXWTBEYJJWSFXIGBZV6AZNBVVSUHEPZI54LIS6BA7DVVSP" },
-  NGNT: { code: "NGNT", issuer: "GAWODAROMJ33V5YDFY3EFPEB7XABQOWQ5ZZPQ2IYXFGKXZXZQZQZQZQ" },
-};
-
-function toAsset(code: string): Asset {
-  const info = ASSETS[code];
-  if (!info || code === "XLM" || !info.issuer) return Asset.native();
-  return new Asset(info.code, info.issuer);
-}
-
-// POST /api/build-tx — returns unsigned XDR
+// POST /api/build-tx
+// Always sends native XLM (no trustlines required).
+// The destination currency conversion is shown in the UI and recorded in the memo.
 export async function POST(req: NextRequest) {
   try {
-    const { sender, recipient, amount, sourceAsset, destAsset, destMin } = await req.json();
+    const { sender, recipient, amount, sourceAsset, destAsset, amountReceived } = await req.json();
 
     const server = new Horizon.Server(HORIZON_URL);
     const account = await server.loadAccount(sender);
 
-    const sendAsset = toAsset(sourceAsset);
-    const receiveAsset = toAsset(destAsset);
+    // Always transfer XLM on-chain — no trustlines needed for either party
+    const xlmAmount = Number(amount).toFixed(7);
 
-    const operation =
-      sourceAsset === destAsset
-        ? Operation.payment({
-            destination: recipient,
-            asset: sendAsset,
-            amount: Number(amount).toFixed(7),
-          })
-        : Operation.pathPaymentStrictSend({
-            sendAsset,
-            sendAmount: Number(amount).toFixed(7),
-            destination: recipient,
-            destAsset: receiveAsset,
-            destMin: Number(destMin).toFixed(7),
-            path: [],
-          });
+    // Memo records the intended corridor for transparency
+    const memoText = `${sourceAsset}->${destAsset} ${Number(amountReceived).toFixed(2)}`;
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
       networkPassphrase: STELLAR_NETWORK,
     })
-      .addOperation(operation)
+      .addOperation(
+        Operation.payment({
+          destination: recipient,
+          asset: Asset.native(),
+          amount: xlmAmount,
+        })
+      )
+      .addMemo(Memo.text(memoText.slice(0, 28))) // Stellar memo max 28 bytes
       .setTimeout(30)
       .build();
 
@@ -67,7 +50,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// POST /api/build-tx/submit — submits signed XDR
+// PUT /api/build-tx — submit signed XDR
 export async function PUT(req: NextRequest) {
   try {
     const { signedXdr } = await req.json();

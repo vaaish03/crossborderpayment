@@ -108,6 +108,7 @@ export default function RemittanceForm() {
         data.amount,
         data.sourceAsset as AssetCode,
         data.destAsset as AssetCode,
+        received,
         (xdr) => signTransaction(xdr, wallet.network ?? "TESTNET")
       );
 
@@ -207,6 +208,9 @@ export default function RemittanceForm() {
                   {received.toFixed(4)} {destAsset}
                 </span>
               </div>
+              <p className="text-text-muted text-xs pt-1">
+                ⓘ Settled in XLM on testnet — conversion shown for reference
+              </p>
             </div>
           )}
 
