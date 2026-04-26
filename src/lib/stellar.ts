@@ -100,3 +100,66 @@ export function truncateAddress(address: string, chars = 6): string {
   if (!address) return "";
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
+
+// ─── Real Stellar path payment ───────────────────────────────────────────────
+import {
+  Horizon,
+  Asset,
+  TransactionBuilder,
+  Operation,
+  BASE_FEE,
+} from "@stellar/stellar-sdk";
+
+function toAsset(code: string): Asset {
+  const info = ASSETS[code as AssetCode];
+  if (code === "XLM" || !info?.issuer) return Asset.native();
+  return new Asset(info.code, info.issuer);
+}
+
+export async function buildAndSubmitPayment(
+  senderAddress: string,
+  recipientAddress: string,
+  amount: string,
+  sourceAsset: AssetCode,
+  destAsset: AssetCode,
+  signFn: (xdr: string) => Promise<string | null>
+): Promise<{ txHash: string }> {
+  const server = new Horizon.Server(HORIZON_URL);
+  const account = await server.loadAccount(senderAddress);
+
+  const sendAsset = toAsset(sourceAsset);
+  const receiveAsset = toAsset(destAsset);
+
+  const rate = getExchangeRate(sourceAsset, destAsset);
+  const feeBps = getFeeBps(sourceAsset, destAsset);
+  const received = calculateReceived(Number(amount), rate, feeBps);
+  // Allow 1% slippage on dest min
+  const destMin = (received * 0.99).toFixed(7);
+
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: STELLAR_NETWORK,
+  })
+    .addOperation(
+      Operation.pathPaymentStrictSend({
+        sendAsset,
+        sendAmount: Number(amount).toFixed(7),
+        destination: recipientAddress,
+        destAsset: receiveAsset,
+        destMin,
+        path: [],
+      })
+    )
+    .setTimeout(30)
+    .build();
+
+  const xdr = tx.toXDR();
+  const signed = await signFn(xdr);
+  if (!signed) throw new Error("Transaction signing was cancelled or failed.");
+
+  const result = await server.submitTransaction(
+    TransactionBuilder.fromXDR(signed, STELLAR_NETWORK)
+  );
+
+  return { txHash: result.hash };
+}

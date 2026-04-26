@@ -13,7 +13,9 @@ import {
   getFeeBps,
   isValidStellarAddress,
   formatAmount,
+  buildAndSubmitPayment,
 } from "@/lib/stellar";
+import { signTransaction } from "@/lib/freighter";
 import type { AssetCode } from "@/lib/stellar";
 import type { Transaction } from "@/types";
 import TransactionModal from "./TransactionModal";
@@ -76,15 +78,15 @@ export default function RemittanceForm() {
   }, [sourceAsset, destAsset, amount]);
 
   const onSubmit = async (data: FormData) => {
-    if (!wallet.isConnected) {
+    if (!wallet.isConnected || !wallet.address) {
       toast.error("Please connect your Freighter wallet first");
       return;
     }
 
-    // Simulate transaction
-    const newTx: Transaction = {
+    // Create a pending tx entry immediately so the modal opens
+    const pendingTx: Transaction = {
       id: Date.now(),
-      sender: wallet.address ?? "DEMO_SENDER",
+      sender: wallet.address,
       recipient: data.recipient,
       amountSent: Number(data.amount),
       amountReceived: received,
@@ -92,18 +94,33 @@ export default function RemittanceForm() {
       destAsset: data.destAsset,
       status: "pending",
       timestamp: Math.floor(Date.now() / 1000),
-      txHash: `demo_${Date.now().toString(16)}`,
+      txHash: "",
     };
 
-    setModalTx(newTx);
-    addTransaction(newTx);
+    setModalTx(pendingTx);
+    addTransaction(pendingTx);
 
-    // Simulate confirmation after 3s
-    await new Promise((r) => setTimeout(r, 3000));
-    newTx.status = "completed";
-    setModalTx({ ...newTx });
-    refreshStats();
-    toast.success("Transaction confirmed on Stellar Testnet!");
+    try {
+      // Build, sign via Freighter popup, and submit to Stellar testnet
+      const { txHash } = await buildAndSubmitPayment(
+        wallet.address,
+        data.recipient,
+        data.amount,
+        data.sourceAsset as AssetCode,
+        data.destAsset as AssetCode,
+        (xdr) => signTransaction(xdr, wallet.network ?? "TESTNET")
+      );
+
+      const completedTx: Transaction = { ...pendingTx, status: "completed", txHash };
+      setModalTx(completedTx);
+      refreshStats();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Transaction failed";
+      toast.error(msg);
+      const failedTx: Transaction = { ...pendingTx, status: "failed" };
+      setModalTx(failedTx);
+      refreshStats();
+    }
   };
 
   return (

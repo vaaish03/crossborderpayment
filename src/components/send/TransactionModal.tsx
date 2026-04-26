@@ -23,14 +23,14 @@ export default function TransactionModal({ tx, onClose }: Props) {
 
   const [toastFired, setToastFired] = useState(false);
 
+  // Step 1 = waiting for Freighter signature, Step 2 = submitted, Step 3+ = done
   useEffect(() => {
     if (tx.status === "pending") {
-      const timers = steps.map((_, i) =>
-        setTimeout(() => setStep(i + 1), (i + 1) * 800)
-      );
-      return () => timers.forEach(clearTimeout);
+      setStep(1); // waiting for wallet signature / network
     } else if (tx.status === "completed") {
       setStep(steps.length);
+    } else if (tx.status === "failed") {
+      setStep(0);
     }
   }, [tx.status]);
 
@@ -78,7 +78,7 @@ export default function TransactionModal({ tx, onClose }: Props) {
             ? "The transaction could not be completed."
             : isDone
             ? "Your funds have been sent successfully."
-            : "Please wait while your transaction is being processed."}
+            : "Check your Freighter wallet to approve the transaction."}
         </p>
 
         {/* Progress Steps */}
