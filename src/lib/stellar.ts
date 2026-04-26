@@ -101,21 +101,7 @@ export function truncateAddress(address: string, chars = 6): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
-// ─── Real Stellar path payment ───────────────────────────────────────────────
-import {
-  Horizon,
-  Asset,
-  TransactionBuilder,
-  Operation,
-  BASE_FEE,
-} from "@stellar/stellar-sdk";
-
-function toAsset(code: string): Asset {
-  const info = ASSETS[code as AssetCode];
-  if (code === "XLM" || !info?.issuer) return Asset.native();
-  return new Asset(info.code, info.issuer);
-}
-
+// ─── Real Stellar path payment (via API route to avoid Node native deps) ─────
 export async function buildAndSubmitPayment(
   senderAddress: string,
   recipientAddress: string,
@@ -124,60 +110,39 @@ export async function buildAndSubmitPayment(
   destAsset: AssetCode,
   signFn: (xdr: string) => Promise<string | null>
 ): Promise<{ txHash: string }> {
-  const server = new Horizon.Server(HORIZON_URL);
-  const account = await server.loadAccount(senderAddress);
-
-  const sendAsset = toAsset(sourceAsset);
-  const receiveAsset = toAsset(destAsset);
-
   const rate = getExchangeRate(sourceAsset, destAsset);
   const feeBps = getFeeBps(sourceAsset, destAsset);
   const received = calculateReceived(Number(amount), rate, feeBps);
-  // Allow 2% slippage on dest min
   const destMin = (received * 0.98).toFixed(7);
 
-  let operation;
-  if (sourceAsset === destAsset) {
-    // Same asset — simple payment
-    operation = Operation.payment({
-      destination: recipientAddress,
-      asset: sendAsset,
-      amount: Number(amount).toFixed(7),
-    });
-  } else {
-    // Cross-asset — path payment
-    operation = Operation.pathPaymentStrictSend({
-      sendAsset,
-      sendAmount: Number(amount).toFixed(7),
-      destination: recipientAddress,
-      destAsset: receiveAsset,
+  // Step 1: Build unsigned XDR server-side
+  const buildRes = await fetch("/api/build-tx", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: senderAddress,
+      recipient: recipientAddress,
+      amount,
+      sourceAsset,
+      destAsset,
       destMin,
-      path: [],
-    });
-  }
-
-  const tx = new TransactionBuilder(account, {
-    fee: BASE_FEE,
-    networkPassphrase: STELLAR_NETWORK,
-  })
-    .addOperation(operation)
-    .setTimeout(30)
-    .build();
-  const signed = await signFn(xdr);
-  if (!signed) throw new Error("Transaction signing was cancelled or failed.");
-
-  const result = await server.submitTransaction(
-    TransactionBuilder.fromXDR(signed, STELLAR_NETWORK)
-  ).catch((err) => {
-    // Extract Horizon result codes for a readable error
-    const extras = err?.response?.data?.extras;
-    const codes = extras?.result_codes;
-    if (codes) {
-      const detail = [codes.transaction, ...(codes.operations ?? [])].filter(Boolean).join(", ");
-      throw new Error(`Stellar error: ${detail}`);
-    }
-    throw new Error(err?.message ?? "Transaction submission failed");
+    }),
   });
+  const buildData = await buildRes.json();
+  if (!buildRes.ok) throw new Error(buildData.error ?? "Failed to build transaction");
 
-  return { txHash: result.hash };
+  // Step 2: Sign with Freighter (triggers wallet popup)
+  const signed = await signFn(buildData.xdr);
+  if (!signed) throw new Error("Transaction signing was cancelled.");
+
+  // Step 3: Submit signed XDR server-side
+  const submitRes = await fetch("/api/build-tx", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ signedXdr: signed }),
+  });
+  const submitData = await submitRes.json();
+  if (!submitRes.ok) throw new Error(submitData.error ?? "Transaction submission failed");
+
+  return { txHash: submitData.txHash };
 }
