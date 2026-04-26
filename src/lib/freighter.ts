@@ -1,3 +1,4 @@
+import { Networks } from "@stellar/stellar-sdk";
 import type { WalletState } from "@/types";
 
 // Freighter API v2 — correct API shape:
@@ -87,7 +88,11 @@ export async function signTransaction(
   const api = await getFreighterApi();
   if (!api) return null;
   try {
-    return await api.signTransaction(xdr, { networkPassphrase: network });
+    const signed = await api.signTransaction(xdr, {
+      network: "TESTNET",
+      networkPassphrase: Networks.TESTNET,
+    });
+    return signed;
   } catch {
     return null;
   }
