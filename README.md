@@ -235,6 +235,20 @@ mobile-
 
 
 demo video- https://drive.google.com/file/d/1ja4YOimF0UpLo4hNQ9Z4U-ey3RhIlJNX/view?usp=sharing
+## User Feedback & Fixes
+
+| # | Feedback | Fix | Commit |
+|---|----------|-----|--------|
+| 1 | "Why do I see my name as Vaishnavi?" | Removed hardcoded "Vaishnavi" from the Profile dropdown on the dashboard — now shows "User" | `a3424ba` |
+| 2 | "What is even slippage tolerance?" | Added an info tooltip (ⓘ) explaining slippage tolerance in plain language: *"Max price movement you'll accept before the transaction reverts"* | `a3424ba` |
+| 3 | "There is so much fake history" | Cleared all 25 hardcoded mock transactions — history now starts empty and only shows real transactions you send | `a3424ba` |
+| 4 | "The monitoring tab is also hard coded" | Monitoring now derives all data from real transactions: volume chart uses last 7 days of actual txs, "Active Users" replaced with "Unique Senders" counted from real data, pie chart reflects real status distribution | `a3424ba` |
+| 5 | "The volume element doesn't make much sense" | Renamed card to "Volume by Corridor", removed confusing "Resources" legend label, added empty state message, clarified top/bottom bubble meaning | `a3424ba` |
+| 6 | "All the data in the homepage is fake" | Dashboard cards (Transactions, Success Rate, Corridors, Timeline) now all derive from real transaction data. Empty states shown when no transactions exist | `a3424ba` |
+| 7 | "When the transaction is complete it doesn't show on Stellar Expert and hit doesn't pop for confirmation" | Added a prominent "View on Stellar Expert" link button in the modal on completion, and a toast notification fires when the transaction confirms | `a3424ba` |
+
+---
+
 ## License
 
 MIT
