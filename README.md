@@ -6,6 +6,23 @@ Send USDC, XLM, and other assets across borders in seconds — not days. Stellar
 
 ---
 
+## 🎯 Demo Note for Judges
+
+**This is a testnet demo.** To keep the demo simple and avoid requiring judges to set up trustlines for multiple assets (USDC, EURC, BRLT, etc.), the current implementation:
+
+- **Settles all transactions in native XLM** on Stellar testnet (no trustlines required)
+- **Shows the corridor conversion** (e.g., USDC→EURC) in the UI and records it in the transaction memo
+- **Demonstrates the full flow:** Freighter wallet popup → real Stellar transaction → real tx hash on Stellar Expert
+
+**For production with real USDC/stablecoin transfers**, the app would:
+1. Use Stellar's `pathPaymentStrictSend` operation to convert between assets on-chain
+2. Require both sender and recipient to have trustlines for the respective assets (one-time setup in Freighter)
+3. Leverage Stellar's built-in DEX liquidity pools for real-time exchange rates
+
+The smart contract in `contracts/remittance/` shows the full production implementation with multi-asset support, rate management, and slippage protection.
+
+---
+
 ## Live Demo
 
 > App runs on **Stellar Testnet**. No real funds are used.
