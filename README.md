@@ -74,6 +74,16 @@ Real users tested the app on Stellar Testnet and submitted feedback via a struct
 - **Feedback Form:** [forms.gle/wNJKaWBzQrjaUyUg6](https://forms.gle/wNJKaWBzQrjaUyUg6)
 - **Responses Sheet:** [Google Sheets](https://docs.google.com/spreadsheets/d/1zQ639QhkONbb5ly03yL3tA1Q_chANjCfI7e-VTgijsg/edit?usp=sharing)
 
+### Testers
+
+| Date | Name | Wallet Address | Feedback |
+|---|---|---|---|
+| 27/04/2026 | Kartik Botre | `GBKLRBXJFBC7SFNZ6PWM5WRHKEOD3PONHYE4UY2N6NJEF3BNS2KU65SV3` | "There is soo much fake history. The monitoring tab is also hard coded." |
+| 26/04/2026 | Om Ingle | `GAZ27SJ7YFLUGO2O4JCTOWLNNXQZ5C7H5A7WFWEBALT6F6JELKJKNV44` | "All the data in the homepage is fake. What is even slippage tolerance?" |
+| 26/04/2026 | Nabha Pote | `GDNQNNBQ2EUZFV4LT6WZMIWVOB4ZSWI3GEXNVJXCD6GT42GN6ZHAZFNJ4` | "Why do I see my name as Vaishnavi on the top right?" |
+| 25/04/2026 | Puja Shelke | `GDK6LOJI7M4JGC2EAHSNMXAFXJ6HRRS3FIRAUQ75FW7TT3H3VHGYQ5C74` | "My transaction was completed still it shows 0% success rate." |
+| 25/04/2026 | Arnav Kapatkar | `GCXIBM23IU5SM4TZXYRQMVQDCYKQKNDCN5W4S72YPCAM2SGXY62LXPBH5` | "Why my name is Vaish 😭 why there is soo much fake data." |
+
 ### Feedback & Fixes
 
 | # | User Feedback | Fix Applied | Commit |
