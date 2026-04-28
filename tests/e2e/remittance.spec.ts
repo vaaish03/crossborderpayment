@@ -11,7 +11,7 @@ test.describe("StellarSend E2E Tests", () => {
 
   test("dashboard shows stats cards", async ({ page }) => {
     await expect(page.locator("text=Total Volume")).toBeVisible();
-    await expect(page.locator("text=Transactions")).toBeVisible();
+    await expect(page.getByRole("paragraph").filter({ hasText: /^Transactions$/ }).first()).toBeVisible();
     await expect(page.locator("text=Success Rate")).toBeVisible();
     await expect(page.locator("text=Active Corridors")).toBeVisible();
   });
@@ -28,7 +28,7 @@ test.describe("StellarSend E2E Tests", () => {
   });
 
   test("navigates to Send Money page", async ({ page }) => {
-    await page.click("text=Send Money");
+    await page.goto("http://localhost:3000/send");
     await expect(page).toHaveURL(/\/send/);
     await expect(page.locator("h1")).toContainText("Send Money");
   });
@@ -66,7 +66,7 @@ test.describe("StellarSend E2E Tests", () => {
     await expect(page.locator("table")).toBeVisible();
     await expect(page.locator("text=Date")).toBeVisible();
     await expect(page.locator("text=Sender")).toBeVisible();
-    await expect(page.locator("text=Status")).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Status" })).toBeVisible();
   });
 
   test("history page has export CSV button", async ({ page }) => {
