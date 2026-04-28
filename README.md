@@ -67,6 +67,26 @@ Stellar's path payment protocol finds the best route through on-chain liquidity 
 
 ---
 
+## User Testing & Feedback
+
+Real users tested the app on Stellar Testnet and submitted feedback via a structured Google Form. All issues were triaged and fixed.
+
+- **Feedback Form:** [forms.gle/wNJKaWBzQrjaUyUg6](https://forms.gle/wNJKaWBzQrjaUyUg6)
+- **Responses Sheet:** [Google Sheets](https://docs.google.com/spreadsheets/d/1zQ639QhkONbb5ly03yL3tA1Q_chANjCfI7e-VTgijsg/edit?usp=sharing)
+
+### Feedback & Fixes
+
+| # | User Feedback | Fix Applied | Commit |
+|---|---|---|---|
+| 1 | "Why do I see my name as Vaishnavi?" | Removed hardcoded name from the Profile dropdown — now shows the connected wallet address | `a3424ba` |
+| 2 | "What is even slippage tolerance?" | Added an info tooltip (ⓘ) with plain-language explanation: *"Max price movement you'll accept before the transaction reverts"* | `a3424ba` |
+| 3 | "There is so much fake history" | Cleared all 25 hardcoded mock transactions — history now starts empty and only shows real on-chain transactions | `a3424ba` |
+| 4 | "The monitoring tab is also hard coded" | Monitoring now derives all stats from real transactions: volume chart uses last 7 days of actual txs, "Active Users" replaced with "Unique Senders", pie chart reflects real status distribution | `a3424ba` |
+| 5 | "The volume element doesn't make much sense" | Renamed card to "Volume by Corridor", removed confusing legend labels, added empty state, clarified bubble meaning | `a3424ba` |
+| 6 | "All the data in the homepage is fake" | Dashboard cards (Transactions, Success Rate, Corridors, Timeline) now all derive from real transaction data with empty states when no transactions exist | `a3424ba` |
+| 7 | "When the transaction is complete it doesn't show on Stellar Expert and there's no confirmation" | Added a "View on Stellar Expert" link button in the completion modal, plus a toast notification when the transaction confirms on-chain | `a3424ba` |
+
+
 ## Features
 
 - **Instant settlement** — transactions confirm in 3–5 seconds on Stellar
@@ -279,24 +299,8 @@ mobile-
 
 
 demo video- https://drive.google.com/file/d/1ja4YOimF0UpLo4hNQ9Z4U-ey3RhIlJNX/view?usp=sharing
-## User Testing & Feedback
 
-Real users tested the app on Stellar Testnet and submitted feedback via a structured Google Form. All issues were triaged and fixed.
 
-- **Feedback Form:** [forms.gle/wNJKaWBzQrjaUyUg6](https://forms.gle/wNJKaWBzQrjaUyUg6)
-- **Responses Sheet:** [Google Sheets](https://docs.google.com/spreadsheets/d/1zQ639QhkONbb5ly03yL3tA1Q_chANjCfI7e-VTgijsg/edit?usp=sharing)
-
-### Feedback & Fixes
-
-| # | User Feedback | Fix Applied | Commit |
-|---|---|---|---|
-| 1 | "Why do I see my name as Vaishnavi?" | Removed hardcoded name from the Profile dropdown — now shows the connected wallet address | `a3424ba` |
-| 2 | "What is even slippage tolerance?" | Added an info tooltip (ⓘ) with plain-language explanation: *"Max price movement you'll accept before the transaction reverts"* | `a3424ba` |
-| 3 | "There is so much fake history" | Cleared all 25 hardcoded mock transactions — history now starts empty and only shows real on-chain transactions | `a3424ba` |
-| 4 | "The monitoring tab is also hard coded" | Monitoring now derives all stats from real transactions: volume chart uses last 7 days of actual txs, "Active Users" replaced with "Unique Senders", pie chart reflects real status distribution | `a3424ba` |
-| 5 | "The volume element doesn't make much sense" | Renamed card to "Volume by Corridor", removed confusing legend labels, added empty state, clarified bubble meaning | `a3424ba` |
-| 6 | "All the data in the homepage is fake" | Dashboard cards (Transactions, Success Rate, Corridors, Timeline) now all derive from real transaction data with empty states when no transactions exist | `a3424ba` |
-| 7 | "When the transaction is complete it doesn't show on Stellar Expert and there's no confirmation" | Added a "View on Stellar Expert" link button in the completion modal, plus a toast notification when the transaction confirms on-chain | `a3424ba` |
 
 ## License
 
