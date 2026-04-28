@@ -33,6 +33,22 @@ The smart contract in `contracts/remittance/` shows the full production implemen
 
 ---
 
+## Deployed Smart Contract
+
+The Soroban remittance contract is deployed on **Stellar Testnet**.
+
+| Field | Value |
+|---|---|
+| Network | Stellar Testnet |
+| Contract ID | `CCTIZ2FC5IQOCMMQAGLOFXCJ6JVKL7MUVCEJY7QZPNPQMXIL275VEOPO` |
+| Explorer | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCTIZ2FC5IQOCMMQAGLOFXCJ6JVKL7MUVCEJY7QZPNPQMXIL275VEOPO) |
+| Language | Rust (Soroban SDK) |
+| Status | Live |
+
+> To interact with the contract directly, use the [Stellar Lab](https://lab.stellar.org) or Soroban CLI with `--network testnet`.
+
+---
+
 ## How It Works
 
 ```
@@ -197,18 +213,29 @@ stellar-send/
 
 ## CI/CD
 
-Every push to `main` runs the full pipeline:
+The pipeline is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and runs automatically on every push to `main` or `develop`, and on all pull requests to `main`.
 
 ```
 smart-contract-tests → frontend-tests → e2e-tests → deploy
+                                      ↗
+                    security-audit
 ```
 
-| Job | What it does |
+| Job | Trigger | What it does |
+|---|---|---|
+| `smart-contract-tests` | every push/PR | Compiles Soroban contract, runs Rust unit tests, builds WASM |
+| `frontend-tests` | every push/PR | TypeScript check, ESLint, Jest with coverage, Next.js build |
+| `e2e-tests` | after `frontend-tests` | Playwright tests against the built app (Chromium) |
+| `security-audit` | every push/PR | `npm audit` + `cargo audit` for known vulnerabilities |
+| `deploy` | `main` push only | Deploys to Vercel production (requires secrets) |
+
+### Required GitHub Secrets
+
+| Secret | Description |
 |---|---|
-| `smart-contract-tests` | Compiles and tests the Soroban contract |
-| `frontend-tests` | TypeScript check, ESLint, Jest, Next.js build |
-| `e2e-tests` | Playwright tests against the built app |
-| `deploy` | Vercel deploy (set `VERCEL_TOKEN` secret to enable) |
+| `VERCEL_TOKEN` | Vercel API token from [vercel.com/account/tokens](https://vercel.com/account/tokens) |
+| `VERCEL_ORG_ID` | Your Vercel team/org ID |
+| `VERCEL_PROJECT_ID` | Your Vercel project ID |
 
 ---
 
@@ -252,23 +279,24 @@ mobile-
 
 
 demo video- https://drive.google.com/file/d/1ja4YOimF0UpLo4hNQ9Z4U-ey3RhIlJNX/view?usp=sharing
-## User Feedback & Fixes
+## User Testing & Feedback
 
-| # | Feedback | Fix | Commit |
-|---|----------|-----|--------|
-| 1 | "Why do I see my name as Vaishnavi?" | Removed hardcoded "Vaishnavi" from the Profile dropdown on the dashboard — now shows "User" | `a3424ba` |
-| 2 | "What is even slippage tolerance?" | Added an info tooltip (ⓘ) explaining slippage tolerance in plain language: *"Max price movement you'll accept before the transaction reverts"* | `a3424ba` |
-| 3 | "There is so much fake history" | Cleared all 25 hardcoded mock transactions — history now starts empty and only shows real transactions you send | `a3424ba` |
-| 4 | "The monitoring tab is also hard coded" | Monitoring now derives all data from real transactions: volume chart uses last 7 days of actual txs, "Active Users" replaced with "Unique Senders" counted from real data, pie chart reflects real status distribution | `a3424ba` |
-| 5 | "The volume element doesn't make much sense" | Renamed card to "Volume by Corridor", removed confusing "Resources" legend label, added empty state message, clarified top/bottom bubble meaning | `a3424ba` |
-| 6 | "All the data in the homepage is fake" | Dashboard cards (Transactions, Success Rate, Corridors, Timeline) now all derive from real transaction data. Empty states shown when no transactions exist | `a3424ba` |
-| 7 | "When the transaction is complete it doesn't show on Stellar Expert and hit doesn't pop for confirmation" | Added a prominent "View on Stellar Expert" link button in the modal on completion, and a toast notification fires when the transaction confirms | `a3424ba` |
+Real users tested the app on Stellar Testnet and submitted feedback via a structured Google Form. All issues were triaged and fixed.
 
----
+- **Feedback Form:** [forms.gle/wNJKaWBzQrjaUyUg6](https://forms.gle/wNJKaWBzQrjaUyUg6)
+- **Responses Sheet:** [Google Sheets](https://docs.google.com/spreadsheets/d/1zQ639QhkONbb5ly03yL3tA1Q_chANjCfI7e-VTgijsg/edit?usp=sharing)
 
-google form link - https://forms.gle/wNJKaWBzQrjaUyUg6
+### Feedback & Fixes
 
-google sheets link- https://docs.google.com/spreadsheets/d/1zQ639QhkONbb5ly03yL3tA1Q_chANjCfI7e-VTgijsg/edit?usp=sharing
+| # | User Feedback | Fix Applied | Commit |
+|---|---|---|---|
+| 1 | "Why do I see my name as Vaishnavi?" | Removed hardcoded name from the Profile dropdown — now shows the connected wallet address | `a3424ba` |
+| 2 | "What is even slippage tolerance?" | Added an info tooltip (ⓘ) with plain-language explanation: *"Max price movement you'll accept before the transaction reverts"* | `a3424ba` |
+| 3 | "There is so much fake history" | Cleared all 25 hardcoded mock transactions — history now starts empty and only shows real on-chain transactions | `a3424ba` |
+| 4 | "The monitoring tab is also hard coded" | Monitoring now derives all stats from real transactions: volume chart uses last 7 days of actual txs, "Active Users" replaced with "Unique Senders", pie chart reflects real status distribution | `a3424ba` |
+| 5 | "The volume element doesn't make much sense" | Renamed card to "Volume by Corridor", removed confusing legend labels, added empty state, clarified bubble meaning | `a3424ba` |
+| 6 | "All the data in the homepage is fake" | Dashboard cards (Transactions, Success Rate, Corridors, Timeline) now all derive from real transaction data with empty states when no transactions exist | `a3424ba` |
+| 7 | "When the transaction is complete it doesn't show on Stellar Expert and there's no confirmation" | Added a "View on Stellar Expert" link button in the completion modal, plus a toast notification when the transaction confirms on-chain | `a3424ba` |
 
 ## License
 
