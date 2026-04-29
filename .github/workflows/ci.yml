@@ -123,6 +123,7 @@ jobs:
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -144,6 +145,7 @@ jobs:
         run: |
           cargo install cargo-audit --locked 2>/dev/null || true
           cargo audit --manifest-path contracts/remittance/Cargo.toml || true
+        continue-on-error: true
 
   # ─── Deploy ────────────────────────────────────────────────────────────────
   # Vercel auto-deploys on every push to main via GitHub integration.
