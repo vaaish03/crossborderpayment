@@ -148,5 +148,22 @@ jobs:
         continue-on-error: true
 
   # ─── Deploy ────────────────────────────────────────────────────────────────
-  # Vercel auto-deploys on every push to main via GitHub integration.
-  # No manual deploy step needed — check vercel.com for deployment status.
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [smart-contract-tests, frontend-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      deployments: write
+    environment:
+      name: production
+      url: https://stellar-send.vercel.app
+    steps:
+      - name: Create GitHub Deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        with:
+          token: ${{ github.token }}
+          environment: production
+          initial-status: success
+          environment-url: https://stellar-send.vercel.app
