@@ -48,6 +48,10 @@ The Soroban remittance contract is deployed on **Stellar Testnet**.
 > To interact with the contract directly, use the [Stellar Lab](https://lab.stellar.org) or Soroban CLI with `--network testnet`.
 
 ---
+ci/cd workflow screenshot 
+<img width="1271" height="712" alt="Screenshot 2026-04-29 at 9 06 12 AM" src="https://github.com/user-attachments/assets/bf14f53f-9465-4e02-8588-43ef3815cae6" />
+
+---
 
 ## How It Works
 
